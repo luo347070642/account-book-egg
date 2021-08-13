@@ -24,7 +24,7 @@ module.exports = appInfo => {
   }
 
   config.view = {
-    mapping: { '.html': 'ejs' } //左边写成.html后缀，会自动渲染.html文件
+    mapping: { '.html': 'ejs' } // 左边写成.html后缀，会自动渲染.html文件
   }
 
   config.mysql = {
@@ -45,6 +45,9 @@ module.exports = appInfo => {
     app: true,
     // 是否加载到 agent 上，默认关闭
     agent: false
+  }
+  config.jwt = {
+    secret: 'Nick'
   }
 
   // add your user config here
