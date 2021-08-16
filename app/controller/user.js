@@ -2,6 +2,9 @@
 
 const Controller = require('egg').Controller
 
+const defaultAvatar =
+  'http://s.yezgea02.com/1615973940679/WeChat77d6d2ac093e247c361f0b8a7aeb6c2a.png'
+
 class UserController extends Controller {
   async register() {
     const { ctx } = this
@@ -27,9 +30,6 @@ class UserController extends Controller {
       }
       return
     }
-    // 默认头像，放在 user.js 的最外，部避免重复声明。
-    const defaultAvatar =
-      'http://s.yezgea02.com/1615973940679/WeChat77d6d2ac093e247c361f0b8a7aeb6c2a.png'
     // 调用 service 方法，将数据存入数据库。
     const result = await ctx.service.user.register({
       username,
@@ -88,6 +88,67 @@ class UserController extends Controller {
       message: '登录成功',
       data: {
         token
+      }
+    }
+  }
+  async getUserInfo() {
+    const { ctx, app } = this
+    const token = ctx.request.header.authorization
+    const decode = app.jwt.verify(token, app.config.jwt.secret)
+    const userInfo = await ctx.service.user.getUserByName(decode.username)
+    ctx.body = {
+      code: 200,
+      msg: '请求成功',
+      data: {
+        id: userInfo.id,
+        username: userInfo.username,
+        signature: userInfo.signature || '',
+        avatar: userInfo.avatar || defaultAvatar
+      }
+    }
+  }
+  // 修改用户信息
+  async editUserInfo() {
+    const { ctx, app } = this
+    // 通过 post 请求，在请求体中获取签名字段 signature
+    const { signature = '' } = ctx.request.body
+
+    try {
+      const token = ctx.request.header.authorization
+      // 解密 token 中的用户名称
+      const decode = await app.jwt.verify(token, app.config.jwt.secret)
+      if (!decode) return
+      const userId = decode.id
+      // 通过 username 查找 userInfo 完整信息
+      const userInfo = await ctx.service.user.getUserByName(decode.username)
+      // 通过 service 方法 editUserInfo 修改 signature 信息。
+      const result = await ctx.service.user.editUserInfo({
+        ...userInfo,
+        signature
+      })
+
+      ctx.body = {
+        code: 200,
+        msg: '请求成功',
+        data: {
+          id: userId,
+          signature,
+          username: userInfo.username
+        }
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  async test() {
+    const { ctx, app } = this
+    // const token = ctx.request.header.authorization
+    // const decode = await app.jwt.verify(token, app.config.jwt.secret)
+    ctx.body = {
+      code: 200,
+      message: '获取成功',
+      data: {
+        // ...decode
       }
     }
   }
