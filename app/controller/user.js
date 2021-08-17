@@ -111,29 +111,31 @@ class UserController extends Controller {
   async editUserInfo() {
     const { ctx, app } = this
     // 通过 post 请求，在请求体中获取签名字段 signature
-    const { signature = '' } = ctx.request.body
+    const { signature = '', avatar = '' } = ctx.request.body
 
     try {
       const token = ctx.request.header.authorization
       // 解密 token 中的用户名称
       const decode = await app.jwt.verify(token, app.config.jwt.secret)
       if (!decode) return
-      const userId = decode.id
+      const user_id = decode.id
       // 通过 username 查找 userInfo 完整信息
       const userInfo = await ctx.service.user.getUserByName(decode.username)
       // 通过 service 方法 editUserInfo 修改 signature 信息。
       const result = await ctx.service.user.editUserInfo({
         ...userInfo,
-        signature
+        signature,
+        avatar
       })
 
       ctx.body = {
         code: 200,
         msg: '请求成功',
         data: {
-          id: userId,
+          id: user_id,
           signature,
-          username: userInfo.username
+          username: userInfo.username,
+          avatar
         }
       }
     } catch (error) {
